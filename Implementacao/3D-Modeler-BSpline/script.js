@@ -45,7 +45,7 @@ document.getElementById("button-define-camera").addEventListener("click", functi
 });
 
 // --------------------------------------------------------------------------------------------------
-// PARAMETROS DOS PLANOS NEAR E FAR
+// PARAMETROS PLANOS NEAR E FAR
 // --------------------------------------------------------------------------------------------------
 document.getElementById("button-definir-planos-near-far").addEventListener("click", () => {
     d_near = parseInt(document.getElementById("plano-near").value);
@@ -62,7 +62,7 @@ document.getElementById("button-definir-planos-near-far").addEventListener("clic
 });
 
 // --------------------------------------------------------------------------------------------------
-// PARAMETROS DA SUPERFICIE
+// MALHA WIREFRAME
 // --------------------------------------------------------------------------------------------------
 
 // PONTOS DE CONTROLE
@@ -126,13 +126,9 @@ document.getElementById("button-define-resolution").addEventListener("click", fu
 document.getElementById("button-generate-surface").addEventListener("click", function () {
     if ((NI >= 3 && NI <= 99) && (NJ >= 3 && NJ <= 99) && (TI >= 3 && TI <= 5) && (TJ >= 3 && TJ <= 5) && (RESOLUTIONI >= 10 && RESOLUTIONI <= 100) && (RESOLUTIONJ >= 10 && RESOLUTIONJ <= 100)) {
         if (camera.VRP && camera.P && camera.Y) {
-            if (window && viewport) {
-                if (d_near && d_far) {
-                    gerarSuperficie(NI, NJ, TI, TJ, RESOLUTIONI, RESOLUTIONJ);
-                    executarPipelineVisualizacao(lista_superficies_SRU[lista_superficies_SRU.length - 1]);
-                } else {
-                    alert("Por favor, defina corretamente os valores dos planos Near e Far.");
-                }
+            if (window_plane && viewport) {
+                gerarSuperficie(NI, NJ, TI, TJ, RESOLUTIONI, RESOLUTIONJ);
+                executarPipelineVisualizacao(lista_superficies_SRU[lista_superficies_SRU.length - 1]);
             } else {
                 alert("Por favor, defina corretamente os valores de Window e/ou Viewport.");
             }
@@ -391,6 +387,7 @@ document.getElementById("button-aplicar-translacao").addEventListener("click", (
         lista_superficies_SRU.forEach((superficie) => {
             executarPipelineVisualizacao(superficie);
         });
+
     } else {
         alert("Por favor, selecione uma superficie.");
     }
@@ -474,11 +471,13 @@ document.getElementById("button-aplicar-rotacao").addEventListener("click", () =
         lista_superficies_SRU.forEach((superficie) => {
             executarPipelineVisualizacao(superficie);
         });
+
     } else {
         alert("Por favor, selecione uma superficie.");
     }
 });
 
+// Cria a matriz de translação.
 function set_Matriz_Translacao(tx, ty, tz) {
     return [
         [1, 0, 0, tx],
@@ -488,6 +487,7 @@ function set_Matriz_Translacao(tx, ty, tz) {
     ];
 }
 
+// Cria a matriz de escala.
 function set_Matriz_Escala(sx, sy, sz) {
     return [
         [sx, 0, 0, 0],
@@ -497,7 +497,9 @@ function set_Matriz_Escala(sx, sy, sz) {
     ];
 }
 
+// Cria a matriz de rotação em radianos.
 function set_Matriz_Rotacao(angle, axis) {
+
     const c = Math.cos(angle);
     const s = Math.sin(angle);
 
@@ -561,7 +563,7 @@ function multiplicar_matriz_transformacao_geometrica(matrixPoints, T) {
 }
 
 // --------------------------------------------------------------------------------------------------
-// EXPORTAR E CARREGAR SUPERFICIES
+// BAIXAR E CARREGAR AS SUPERFICIES
 // --------------------------------------------------------------------------------------------------
 document.getElementById("button-exportar-superficies").addEventListener("click", () => {
     let dados = {
@@ -1037,7 +1039,15 @@ function atualizarSelectSuperficies() {
 // --------------------------------------------------------------------------------------------------
 // CAMERA:
 // --------------------------------------------------------------------------------------------------
-let camera = {};
+let camera = {
+    VRP: {},
+    P: {},
+    Y: {}
+
+    // VRP: { x: 100, y: 15, z: 0 },
+    // P: { x: 20, y: 10, z: 25 },
+    // Y: { x: 0, y: 1, z: 0 }  
+};
 
 // --------------------------------------------------------------------------------------------------
 // MATRIZ TRANSFORMACAO DE CAMERA SRU,SRC
@@ -1089,8 +1099,8 @@ function calcular_centroide_superficie(matriz_pontos_superficie_SRU) {
     };
 }
 
-let d_near;
-let d_far;
+let d_near; // - 100
+let d_far; // 1000
 
 // Função para verificar se o centroide do objeto está dentro dos planos near e far.
 function check_Near_Far(centroide_superficie, camera, d_near, d_far, n_unitario) {
@@ -1142,12 +1152,22 @@ function set_Matriz_Proj_Axonometrica_Isometrica() {
 // --------------------------------------------------------------------------------------------------
 // COORDENADAS DE MUNDO -> JANELA DE VISÃO
 // --------------------------------------------------------------------------------------------------
-let window_plane = {};
+let window_plane = {
+    // xmin: -8,
+    // ymin: -6,
+    // xmax: 8,
+    // ymax: 6
+};
 
 // --------------------------------------------------------------------------------------------------
 // COORDENADAS DE TELA -> VIEW PORT
 // --------------------------------------------------------------------------------------------------
-let viewport = {};
+let viewport = {
+    // umin: 0,
+    // vmin: 0,
+    // umax: 319,
+    // vmax: 219
+};
 
 // --------------------------------------------------------------------------------------------------
 // MATRIZ TRANSFORMACAO JANELA -> PORTA DE VISÃO
@@ -1414,7 +1434,9 @@ function executarPipelineVisualizacao(superficie) {
     // RECORTE 3D
     // --------------------------------------------------------------------------------------------------
 
+    // Calculando centroide da superficie.
     let centroide_superficie = calcular_centroide_superficie(superficie.matriz_pontos_superficie_SRU);
+
     let recorte_3D_check = check_Near_Far(centroide_superficie, camera, d_near, d_far, n_unitario);
 
     if (recorte_3D_check) {
@@ -1429,7 +1451,6 @@ function executarPipelineVisualizacao(superficie) {
         // DEFININDO A MATRIZ IDENTIDADE DE PROJECAO AXONOMETRICA ISOMETRICA.
         let M_proj = set_Matriz_Proj_Axonometrica_Isometrica();
 
-
         // --------------------------------------------------------------------------------------------------
         // MAPEAMENTO PARA O SRT
         // --------------------------------------------------------------------------------------------------
@@ -1440,18 +1461,15 @@ function executarPipelineVisualizacao(superficie) {
         // CONCATENANDO AS MATRIZES DO PIPELINE. (M_SRU_SRT = M_jp * M_proj * M_SRU_SRC).
         let M_SRU_SRT = multiplyMatrices(multiplyMatrices(M_jp, M_proj), M_SRU_SRC);
 
-
         // --------------------------------------------------------------------------------------------------
         // CALCULO DA VISIBILIDADE PELA NORMAL DA FACE
         // --------------------------------------------------------------------------------------------------
         let faces_ordenadas_SRU = calcular_visibilidade_faces(camera, superficie.matriz_pontos_superficie_SRU, superficie.RESOLUTIONI, superficie.RESOLUTIONJ, superficie.cor_aresta_visivel, superficie.cor_aresta_nao_visivel);
 
-
         // --------------------------------------------------------------------------------------------------
         // CALCULO PARA TRANSFORMAR CADA FACE SRU PARA SRT
         // --------------------------------------------------------------------------------------------------
         let faces_ordenadas_SRT = transformar_Faces_SRU_SRT(faces_ordenadas_SRU, M_SRU_SRT);
-
 
         // --------------------------------------------------------------------------------------------------
         // CALCULO PARA TRANSFORMAR A MATRIZ PONTOS DE CONTROLE SRU PARA SRT
@@ -1471,9 +1489,7 @@ function executarPipelineVisualizacao(superficie) {
         console.log("--------------------------------------------------------------------------------------------");
         console.log("CAMERA: ", camera);
         console.log("MATRIZ TRANSFORMACAO DE CAMERA: ", M_SRU_SRC);
-
         console.log("CENTROIDE DA SUPERFICIE: ", centroide_superficie);
-
         console.log("MATRIZ PROJECAO AXONOMETRICA ISOMETRICA: ", M_proj);
         console.log("WINDOW: ", superficie.window_plane);
         console.log("VIEWPORT: ", superficie.viewport);

@@ -1,1 +1,0 @@
-2. Pintar os pixels interno das faces com a cor de fundo da aplicacao. (Fillpoly)

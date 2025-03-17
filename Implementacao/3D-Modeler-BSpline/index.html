@@ -9,13 +9,16 @@
 </head>
 
 <body>
-
   <main>
+    <!-- JANELA CANVAS -->
     <canvas id="canvas"></canvas>
 
+    <!-- MENU DE OPCOES DA APLICACAO -->
     <div id="div-menu-options">
 
       <!-- 
+        PARAMETROS DA CAMERA
+
         VRP: { x: 100, y: 15, z: 0 },   // Exemplo de valor para VRP.
         P: { x: 20, y: 10, z: 25 },     // Exemplo de valor para P (posição da câmera).
         Y: { x: 0, y: 1, z: 0 }         // Vetor up.
@@ -23,21 +26,21 @@
       <div id="div-camera-options">
         <div id="div-camera-values">
           <div id="div-camera-VRP">
-            <label for="VRP">VRP - Posicao da Camera</label>
+            <label for="VRP">VRP - Posicao da Camera:</label>
             <input type="number" name="VRP" id="VRP-x" placeholder="x">
             <input type="number" name="VRP" id="VRP-y" placeholder="y">
             <input type="number" name="VRP" id="VRP-z" placeholder="z">
           </div>
 
           <div id="div-camera-P">
-            <label for="P">P - Ponto Focal</label>
+            <label for="P">P - Ponto Focal:</label>
             <input type="number" name="P" id="P-x" placeholder="x">
             <input type="number" name="P" id="P-y" placeholder="y">
             <input type="number" name="P" id="P-z" placeholder="z">
           </div>
 
           <div id="div-camera-Y">
-            <label for="Y">Y - View Up</label>
+            <label for="Y">Y - View Up:</label>
             <input type="number" name="Y" id="Y-x" placeholder="x">
             <input type="number" name="Y" id="Y-y" placeholder="y">
             <input type="number" name="Y" id="Y-z" placeholder="z">
@@ -50,18 +53,18 @@
 
         <!-- PLANOS NEAR E FAR -->
         <div id="div-planos-near-far">
-          <label for="plano-near">Near</label>
+          <label for="plano-near">Near:</label>
           <input type="number" name="plano-near" id="plano-near">
 
-          <label for="plano-far">Far</label>
+          <label for="plano-far">Far:</label>
           <input type="number" name="plano-far" id="plano-far">
 
           <button id="button-definir-planos-near-far">Definir Planos</button>
         </div>
       </div>
 
-
       <!-- 
+        PARAMETROS DA SUPERFICIE
         const NI = 3;           // Número de pontos de controle na direção i (índices 0 a 3 → 4 pontos).
         const NJ = 3;           // Número de pontos de controle na direção j (índices 0 a 3 → 4 pontos).
         const TI = 3;           // Grau da spline na direção i.
@@ -95,7 +98,7 @@
         </div>
       </div>
 
-      <!-- PALETA DE CORES PARA ARESTAS VISIVEIS E NAO VISIVEIS -->
+      <!-- PALETA DE CORES PARA AS ARESTAS VISIVEIS E NAO VISIVEIS -->
       <div id="div-color-arestas">
         <div id="div-color-arestas-visiveis">
           <label for="color-aresta-visivel">Arestas Visíveis</label> <br>
@@ -110,7 +113,7 @@
         </div>
       </div>
 
-      <!-- EDITAR VALORES WINDOW E VIEWPORT -->
+      <!-- PARAMETROS WINDOW E VIEWPORT -->
       <div id="div-window-viewport-options">
         <div id="div-window-options">
           <h2>Window</h2>
@@ -155,24 +158,26 @@
         </div>
       </div>
 
-      <!-- GERAR SUPERFICIE -->
+      <!-- GERAR SUPERFICIE, EXPORTAR DADOS E CARREGAR DADOS -->
       <div id="div-gerar-exportar-carregar-options">
         <button id="button-generate-surface">Gerar Superficie</button>
         <button id="button-exportar-superficies">Exportar Superficies</button>
         <input type="file" id="input_surfaces_data_file" style="display: none;">
-        <button onclick="document.getElementById('input_surfaces_data_file').click()" id="button-carregar-arquivo">Escolher Arquivo</button>
+        <button onclick="document.getElementById('input_surfaces_data_file').click()"
+          id="button-carregar-arquivo">Carregar Arquivo</button>
       </div>
 
-      <!-- EDICAO SOBRE A SUPERFICIE -->
+      <!-- OPERACOES SOBRE A SUPERFICIE -->
       <div id="div-operacoes-superficie">
 
-        <!-- ARMAZENAMENTO DAS SUPERFICIES -->
+        <!-- ARMAZENAMENTO E SELECAO DAS SUPERFICIES -->
         <div id="div-select-pontos-de-controle">
           <select name="superficies-armazenadas" id="superficies-armazenadas">
             <option value="#" selected disabled>Selecione uma superficie</option>
           </select>
         </div>
 
+        <!-- EDICAO DOS PONTOS DE CONTROLE -->
         <div id="div-button-editar-pontos-controle">
           <button id="button-editar-pontos-controle">Editar Pontos de Controle</button>
         </div>
@@ -220,6 +225,7 @@
       </div>
     </div>
 
+    <!-- JANELA DE EDICAO DOS PONTOS DE CONTROLE -->
     <div id="div-editar-pontos-controle-superficie">
       <h3>Editar Pontos de Controle</h3>
 

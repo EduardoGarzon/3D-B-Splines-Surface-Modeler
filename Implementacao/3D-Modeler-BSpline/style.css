@@ -9,15 +9,12 @@
     font-weight: bold;
 }
 
-
-
 /* JANELA CANVAS */
 #canvas {
     border: 1px solid black;
 }
 
-
-
+/* MAIN */
 main {
     display: flex;
     flex-direction: row;
@@ -28,7 +25,16 @@ main {
     height: 100vh;
 }
 
+/* INPUTS */
+input[type="number"] {
+    width: 50px;
+    margin-bottom: 0.5rem;
+}
 
+/* LABELS */
+label {
+    width: 100px;
+}
 
 /* MENU DE OPCOES */
 #div-menu-options {
@@ -40,35 +46,6 @@ main {
     transform: scale(0.75);
     transform-origin: center;
 }
-
-
-
-/* OPCOES DA MALHA WIREFRAME */
-#div-wireframe-options {
-    display: flex;
-    flex-direction: row;
-    border: 1px solid black;
-    padding: 0.5rem;
-    margin-bottom: 1rem;
-}
-
-#div-control-points-options,
-#div-surface-degree-options,
-#div-surface-resolution-options {
-    display: flex;
-    flex-direction: column;
-    padding: 0.5rem;
-}
-
-#div-control-points-options>label {
-    width: 140px
-}
-
-#div-wireframe-options button {
-    padding: 0.2rem;
-}
-
-
 
 /* OPCOES DA CAMERA */
 #div-camera-options {
@@ -98,21 +75,88 @@ main {
     padding: .2rem;
 }
 
-
-
-
-
-/* INPUTS */
-input[type="number"] {
-    width: 50px;
-    margin-bottom: 0.5rem;
+/* OPCOES DA MALHA WIREFRAME */
+#div-wireframe-options {
+    display: flex;
+    flex-direction: row;
+    border: 1px solid black;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
 }
 
-/* LABELS */
-label {
-    width: 100px;
+#div-control-points-options,
+#div-surface-degree-options,
+#div-surface-resolution-options {
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem;
 }
 
+#div-control-points-options>label {
+    width: 140px
+}
+
+#div-wireframe-options button {
+    padding: 0.2rem;
+}
+
+/* PELETA DE CORES PARA AS ARESTAS */
+#div-color-arestas {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    border: 1px solid black;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+#div-color-arestas button {
+    padding: .2rem;
+}
+
+/* WINDOW E VIEWPORT */
+#div-window-viewport-options {
+    display: flex;
+    flex-direction: row;
+    border: 1px solid black;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+#div-window-viewport-options h2 {
+    margin-bottom: .5rem;
+    text-align: center;
+}
+
+#div-button-window, #div-button-viewport{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#div-button-window button, #div-button-viewport button {
+    padding: 0.5rem;
+}
+
+/* GERAR, EXPORTAR, CARREGAR */
+#div-gerar-exportar-carregar-options {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: row;
+    gap: 1rem;
+}
+
+#div-gerar-exportar-carregar-options button {
+    padding: .2rem;
+
+}
 
 /* EDICAO DOS PONTOS DE CONTROLE */
 #div-editar-pontos-controle-superficie {
@@ -187,73 +231,7 @@ table thead {
     align-items: center;
 }
 
-
-
-/* PELETA DE CORES PARA AS ARESTAS */
-#div-color-arestas {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    gap: 1rem;
-    border: 1px solid black;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    text-align: center;
-}
-
-#div-color-arestas button {
-    padding: .2rem;
-}
-
-
-
-/* WINDOW E VIEWPORT */
-#div-window-viewport-options {
-    display: flex;
-    flex-direction: row;
-    border: 1px solid black;
-    align-items: center;
-    justify-content: center;
-    gap: 2rem;
-    padding: 0.5rem;
-    margin-bottom: 1rem;
-}
-
-#div-window-viewport-options h2 {
-    margin-bottom: .5rem;
-    text-align: center;
-}
-
-#div-button-window, #div-button-viewport{
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-#div-button-window button, #div-button-viewport button {
-    padding: 0.5rem;
-}
-
-
-/* GERAR, EXPORTAR, CARREGAR */
-#div-gerar-exportar-carregar-options {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: row;
-    gap: 1rem;
-}
-
-#div-gerar-exportar-carregar-options button {
-    padding: .2rem;
-
-}
-
-
-
 /* TRANSFORMACOES GEOMETRICAS */
-
 #div-tranformacoes-geometricas {
     border: 1px solid black;
     padding: .5rem;

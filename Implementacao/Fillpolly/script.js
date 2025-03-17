@@ -1,3 +1,14 @@
+
+
+
+
+
+
+
+
+
+// ------------------------------------------------------------------------------------------------------------
+// ALGORITMO FILLPOLY
 // ------------------------------------------------------------------------------------------------------------
 const canvas = document.getElementById('window-div');
 const context = canvas.getContext('2d');
@@ -6,7 +17,6 @@ let array_vertices = [];
 let array_poligonos = [];
 let flag_novo_poligono = false;
 
-const button_change_window_color = document.getElementById('button-change-window-color');
 const button_novo_poligono = document.getElementById('button-novo-poligono');
 const button_salvar_poligono = document.getElementById('button-salvar-poligono');
 const button_fillpoly = document.getElementById('button-fillpoly');
@@ -20,18 +30,6 @@ const poligonos_salvos = document.getElementById('poligonos');
 // ------------------------------------------------------------------------------------------------------------
 
 // ------------------------------------------------------------------------------------------------------------
-
-// Evento para alternar os temas da janela do Canva.
-button_change_window_color.addEventListener('click', () => {
-    if (canvas.style.backgroundColor == "rgb(0, 0, 0)") {
-        canvas.style.backgroundColor = "#FFFFFF";
-        button_change_window_color.innerHTML = "Change to Black";
-    } else {
-        canvas.style.backgroundColor = "#000000";
-        button_change_window_color.innerHTML = "Change to White";
-    }
-});
-
 // Evento para iniciar novo polígono.
 button_novo_poligono.addEventListener('click', (e) => {
     window.alert("Novo Poligono pode ser desenhado.");
@@ -52,7 +50,7 @@ button_salvar_poligono.addEventListener('click', (e) => {
         console.log(array_vertices);
 
         // Armazena o polígono.
-        const poligono_color = canvas.style.backgroundColor == "rgb(0, 0, 0)" ? "#000000" : "#FFFFFF";
+        const poligono_color = canvas.style.backgroundColor == "#FFFFFF";
         let flag_poligono_colorido = false;
         array_poligonos.push({ array_vertices, poligono_color, flag_poligono_colorido });
         array_vertices = [];

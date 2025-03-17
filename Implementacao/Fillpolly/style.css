@@ -5,47 +5,14 @@
     font-family: monospace, 'Segoe UI', sans-serif;
 }
 
-header {
-    width: 100vw;
-    height: 10vh;
-    
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
 main {
     width: 100vw;
-    height: 85vh;
+    height: 100vh;
 
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: space-around;
-}
-
-footer {
-    width: 100vw;
-    height: 5vh;
-    
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-style: italic;
-}
-
-/* Botão tema da janela */
-#div-change-window-color {
-    margin-left: 1em;
-    margin-right: 1em;
-}
-
-#button-change-window-color {
-    width: 180px;
-    height: 40px;
-    
-    font-weight: bold;
-    font-size: 1em;
 }
 
 /* Janela Canvas */

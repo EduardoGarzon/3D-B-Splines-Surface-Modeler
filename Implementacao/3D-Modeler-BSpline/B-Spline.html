@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Superfície B‑Spline</title>
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    canvas {
+      border: 1px solid #000;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="canvas" width="800" height="600"></canvas>
+  <script>
+
+    // --------------------------------------------------------------------------------------------------
+    // DEFININDO A B-SPLINE
+    // -------------------------------------------------------------------------------------------------- 
+
+
+    // Constantes definindo a quantidade de pontos de controle, grau e resolução da superfície.
+    const NI = 3;           // Número de pontos de controle na direção i (índices 0 a 3 → 4 pontos).
+    const NJ = 3;           // Número de pontos de controle na direção j (índices 0 a 3 → 4 pontos).
+    const TI = 3;           // Grau da spline na direção i.
+    const TJ = 3;           // Grau da spline na direção j.
+    const RESOLUTIONI = 15; // Número de amostras (passos) para avaliar a spline na direção i.
+    const RESOLUTIONJ = 15; // Número de amostras (passos) para avaliar a spline na direção j.
+
+    // Função para gerar um vetor de nós (knots) para a spline clamped (com extremos fixos).
+    // Esses nós determinam como e onde os pontos de controle influenciam a curva ou a superfície.
+    // Para uma spline de grau "degree" com n+1 pontos de controle, o número total de nós é n + degree + 2.
+    // Usamos L = n - degree + 2 para definir o intervalo dos nós.
+    // Após gerar o vetor de nós, esses valores são usados, junto com os pontos de controle, para calcular os pontos reais da superfície.
+    function splineKnots(n, degree) {
+      const totalKnots = n + degree + 2; // Número total de nós.
+      const knots = new Array(totalKnots);
+      const L = n - degree + 2;  // Valor final do parâmetro (por exemplo, para n=3, degree=3, L=2).
+
+      // Primeiros (degree+1) nós são 0:
+      for (let i = 0; i <= degree; i++) {
+        knots[i] = 0;
+      }
+
+      // Últimos (degree+1) nós são L:
+      for (let i = totalKnots - degree - 1; i < totalKnots; i++) {
+        knots[i] = L;
+      }
+
+      // Nós internos, se houver, distribuídos uniformemente entre 0 e L.
+      if (n - degree > 0) {
+        let step = L / (n - degree + 1);
+
+        for (let i = degree + 1; i < totalKnots - degree - 1; i++) {
+          knots[i] = (i - degree) * step;
+        }
+      }
+
+      return knots;
+    }
+
+    // Função de blending (base B‑Spline) usando a recursão de Cox‑de‑Boor.
+    // Valores de influência dos pontos de controle em um dado parâmetro.
+    // Define como cada ponto de controle contribui para cada ponto avaliado na superfície.
+    function splineBlend(i, degree, knots, u) {
+
+      if (degree === 0) {
+
+        // Caso base: retorna 1 se u estiver no intervalo [knots[i], knots[i+1]).
+        if (knots[i] <= u && u < knots[i + 1]) return 1;
+
+        // Se u for o último valor e u == knots[i+1]
+        if (u === knots[knots.length - 1] && u === knots[i + 1]) return 1;
+
+        return 0;
+
+      } else {
+
+        let denom1 = knots[i + degree] - knots[i];
+        let denom2 = knots[i + degree + 1] - knots[i + 1];
+        let term1 = 0;
+        let term2 = 0;
+
+        if (denom1 !== 0) {
+          term1 = ((u - knots[i]) / denom1) * splineBlend(i, degree - 1, knots, u);
+        }
+
+        if (denom2 !== 0) {
+          term2 = ((knots[i + degree + 1] - u) / denom2) * splineBlend(i + 1, degree - 1, knots, u);
+        }
+
+        return term1 + term2;
+      }
+    }
+
+    // Criação dos pontos de controle (matriz matriz_pontos_de_controle) – dimensões: (NI+1) x (NJ+1).
+    let matriz_pontos_de_controle = [];
+    for (let i = 0; i <= NI; i++) {
+      matriz_pontos_de_controle[i] = [];
+
+      for (let j = 0; j <= NJ; j++) {
+        matriz_pontos_de_controle[i][j] = {
+          x: i,
+          y: j,
+          // z será um número aleatório entre -1 e 1.
+          z: (Math.floor(Math.random() * 10000) / 5000.0) - 1
+        };
+      }
+    }
+
+    // Calcula os vetores de nós para cada direção.
+    const knotsI = splineKnots(NI, TI);
+    const knotsJ = splineKnots(NJ, TJ);
+
+    // Calcula os incrementos para os parâmetros (u e v) usados para avaliar a spline.
+    // A faixa em u será de 0 até (NI - TI + 2) e em v de 0 até (NJ - TJ + 2)
+    const incrementI = (NI - TI + 2) / (RESOLUTIONI - 1);
+    const incrementJ = (NJ - TJ + 2) / (RESOLUTIONJ - 1);
+
+    // Cria a matriz de pontos da superfície (matriz_pontos_superficie) – dimensões: RESOLUTIONI x RESOLUTIONJ.
+    // Essa matriz vai armazenar os pontos avaliados na superfície B-spline.
+    let matriz_pontos_superficie = new Array(RESOLUTIONI);
+    for (let i = 0; i < RESOLUTIONI; i++) {
+      matriz_pontos_superficie[i] = new Array(RESOLUTIONJ);
+    }
+
+    // Calcula os pontos da superfície para os valores internos.
+    // Cada posição da matriz recebe as coordenadas (x, y, z) avaliadas da superfície B‑Spline.
+    let u = 0;
+    for (let i = 0; i < RESOLUTIONI - 1; i++) {
+      let v = 0;
+
+      for (let j = 0; j < RESOLUTIONJ - 1; j++) {
+        let sum = { x: 0, y: 0, z: 0 };
+
+        for (let ki = 0; ki <= NI; ki++) {
+          for (let kj = 0; kj <= NJ; kj++) {
+            let bi = splineBlend(ki, TI, knotsI, u);
+            let bj = splineBlend(kj, TJ, knotsJ, v);
+
+            sum.x += matriz_pontos_de_controle[ki][kj].x * bi * bj;
+            sum.y += matriz_pontos_de_controle[ki][kj].y * bi * bj;
+            sum.z += matriz_pontos_de_controle[ki][kj].z * bi * bj;
+          }
+        }
+
+        matriz_pontos_superficie[i][j] = sum;
+        v += incrementJ;
+      }
+
+      u += incrementI;
+    }
+
+
+
+    // Os laços anteriores não cobrem a última coluna e a última linha da matriz.
+    // São feitas somas semelhantes, mas fixando os índices correspondentes à borda (último j para coluna e último i para linha).
+    // O último ponto é atribuído diretamente como o último ponto de controle, garantindo consistência na borda.
+
+    // Calcula os pontos da última coluna.
+    u = 0;
+    for (let i = 0; i < RESOLUTIONI - 1; i++) {
+      let sum = { x: 0, y: 0, z: 0 };
+
+      for (let ki = 0; ki <= NI; ki++) {
+        let bi = splineBlend(ki, TI, knotsI, u);
+
+        sum.x += matriz_pontos_de_controle[ki][NJ].x * bi;
+        sum.y += matriz_pontos_de_controle[ki][NJ].y * bi;
+        sum.z += matriz_pontos_de_controle[ki][NJ].z * bi;
+      }
+
+      matriz_pontos_superficie[i][RESOLUTIONJ - 1] = sum;
+      u += incrementI;
+    }
+    // Último ponto da última coluna.
+    matriz_pontos_superficie[RESOLUTIONI - 1][RESOLUTIONJ - 1] = { ...matriz_pontos_de_controle[NI][NJ] };
+
+    // Calcula os pontos da última linha.
+    let v = 0;
+    for (let j = 0; j < RESOLUTIONJ - 1; j++) {
+      let sum = { x: 0, y: 0, z: 0 };
+
+      for (let kj = 0; kj <= NJ; kj++) {
+        let bj = splineBlend(kj, TJ, knotsJ, v);
+
+        sum.x += matriz_pontos_de_controle[NI][kj].x * bj;
+        sum.y += matriz_pontos_de_controle[NI][kj].y * bj;
+        sum.z += matriz_pontos_de_controle[NI][kj].z * bj;
+      }
+
+      matriz_pontos_superficie[RESOLUTIONI - 1][j] = sum;
+      v += incrementJ;
+    }
+    matriz_pontos_superficie[RESOLUTIONI - 1][RESOLUTIONJ - 1] = { ...matriz_pontos_de_controle[NI][NJ] };
+
+    // Função de projeção isométrica simples para converter pontos 3D em 2D.
+    function project(point) {
+      const angle = Math.PI / 6; // 30 graus
+      let x2d = (point.x - point.y) * Math.cos(angle);
+      let y2d = (point.x + point.y) * Math.sin(angle) - point.z;
+      return { x: x2d, y: y2d };
+    }
+
+    // Configuração do canvas
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const scale = 40;               // Fator de escala para ampliar a projeção.
+    const offsetX = canvas.width / 2;
+    const offsetY = canvas.height / 2;
+
+    // Converte as coordenadas 2D para o sistema do canvas.
+    function transform2D(point2d) {
+      return {
+        x: point2d.x * scale + offsetX,
+        y: -point2d.y * scale + offsetY
+      };
+    }
+
+    // Função para desenhar a superfície como uma malha de quadriláteros.
+    function drawSurface() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = 'blue';
+      ctx.lineWidth = 1;
+
+      for (let i = 0; i < RESOLUTIONI - 1; i++) {
+        for (let j = 0; j < RESOLUTIONJ - 1; j++) {
+          let p0 = transform2D(project(matriz_pontos_superficie[i][j]));
+          let p1 = transform2D(project(matriz_pontos_superficie[i][j + 1]));
+          let p2 = transform2D(project(matriz_pontos_superficie[i + 1][j + 1]));
+          let p3 = transform2D(project(matriz_pontos_superficie[i + 1][j]));
+
+          ctx.beginPath();
+          ctx.moveTo(p0.x, p0.y);
+          ctx.lineTo(p1.x, p1.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.lineTo(p3.x, p3.y);
+          ctx.closePath();
+          ctx.stroke();
+        }
+      }
+    }
+
+    // Função para desenhar os pontos de controle.
+    function drawControlPoints() {
+      ctx.fillStyle = 'red';
+
+      for (let i = 0; i <= NI; i++) {
+        for (let j = 0; j <= NJ; j++) {
+          let p = transform2D(project(matriz_pontos_de_controle[i][j]));
+
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 3, 0, 2 * Math.PI);
+          ctx.fill();
+        }
+      }
+    }
+
+    // Desenha a superfície e os pontos de controle.
+    drawSurface();
+    drawControlPoints();
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+  <title>Modelador B-Spline 3D</title>
+</head>
+
+<body>
+
+  <main>
+    <canvas id="canvas"></canvas>
+
+    <div id="div-menu-options">
+
+      <!-- 
+        VRP: { x: 100, y: 15, z: 0 },   // Exemplo de valor para VRP.
+        P: { x: 20, y: 10, z: 25 },     // Exemplo de valor para P (posição da câmera).
+        Y: { x: 0, y: 1, z: 0 }         // Vetor up.
+      -->
+      <div id="div-camera-options">
+        <div id="div-camera-values">
+          <div id="div-camera-VRP">
+            <label for="VRP">VRP - Posicao da Camera</label>
+            <input type="number" name="VRP" id="VRP-x" placeholder="x">
+            <input type="number" name="VRP" id="VRP-y" placeholder="y">
+            <input type="number" name="VRP" id="VRP-z" placeholder="z">
+          </div>
+
+          <div id="div-camera-P">
+            <label for="P">P - Ponto Focal</label>
+            <input type="number" name="P" id="P-x" placeholder="x">
+            <input type="number" name="P" id="P-y" placeholder="y">
+            <input type="number" name="P" id="P-z" placeholder="z">
+          </div>
+
+          <div id="div-camera-Y">
+            <label for="Y">Y - View Up</label>
+            <input type="number" name="Y" id="Y-x" placeholder="x">
+            <input type="number" name="Y" id="Y-y" placeholder="y">
+            <input type="number" name="Y" id="Y-z" placeholder="z">
+          </div>
+
+          <div id="div-button-camera">
+            <button id="button-define-camera">Definir Camera</button>
+          </div>
+        </div>
+
+        <!-- PLANOS NEAR E FAR -->
+        <div id="div-planos-near-far">
+          <label for="plano-near">Near</label>
+          <input type="number" name="plano-near" id="plano-near">
+
+          <label for="plano-far">Far</label>
+          <input type="number" name="plano-far" id="plano-far">
+
+          <button id="button-definir-planos-near-far">Definir Planos</button>
+        </div>
+      </div>
+
+
+      <!-- 
+        const NI = 3;           // Número de pontos de controle na direção i (índices 0 a 3 → 4 pontos).
+        const NJ = 3;           // Número de pontos de controle na direção j (índices 0 a 3 → 4 pontos).
+        const TI = 3;           // Grau da spline na direção i.
+        const TJ = 3;           // Grau da spline na direção j.
+        const RESOLUTIONI = 15; // Número de amostras (passos) para avaliar a spline na direção i.
+        const RESOLUTIONJ = 15; // Número de amostras (passos) para avaliar a spline na direção j.
+      -->
+      <div id="div-wireframe-options">
+        <div id="div-control-points-options">
+          <label for="control-points-i">Pontos de Controle [i]</label>
+          <input type="number" name="control-points-i" id="control-points-i" min="4" max="10">
+          <label for="control-points-j">Pontos de Controle [j]</label>
+          <input type="number" name="control-points-j" id="control-points-j" min="4" max="10">
+          <button id="button-define-control-points">Definir Pontos de Controle</button>
+        </div>
+
+        <div id="div-surface-degree-options">
+          <label for="spline-degree-i">Grau Spline [i]</label>
+          <input type="number" name="spline-degree-i" id="spline-degree-i" min="3" max="5">
+          <label for="spline-degree-j">Grau Spline [j]</label>
+          <input type="number" name="spline-degree-j" id="spline-degree-j" min="3" max="5">
+          <button id="button-define-spline-degree">Definir Grau da Spline</button>
+        </div>
+
+        <div id="div-surface-resolution-options">
+          <label for="resolution-i">Resolucao [i]</label>
+          <input type="number" name="resolution-i" id="resolution-i" min="10" max="100">
+          <label for="resolution-j">Resolucao [j]</label>
+          <input type="number" name="resolution-j" id="resolution-j" min="10" max="100">
+          <button id="button-define-resolution">Definir Resolucao</button>
+        </div>
+      </div>
+
+      <!-- PALETA DE CORES PARA ARESTAS VISIVEIS E NAO VISIVEIS -->
+      <div id="div-color-arestas">
+        <div id="div-color-arestas-visiveis">
+          <label for="color-aresta-visivel">Arestas Visíveis</label> <br>
+          <input type="color" name="color-aresta-visivel" id="color-aresta-visivel">
+          <button id="definir-cor-aresta-visivel">Definir Cor</button>
+        </div>
+
+        <div id="div-color-arestas-nao-visiveis">
+          <label for="color-aresta-nao-visivel">Arestas não Visíveis</label> <br>
+          <input type="color" name="color-aresta-nao-visivel" id="color-aresta-nao-visivel">
+          <button id="definir-cor-aresta-nao-visivel">Definir Cor</button>
+        </div>
+      </div>
+
+      <!-- EDITAR VALORES WINDOW E VIEWPORT -->
+      <div id="div-window-viewport-options">
+        <div id="div-window-options">
+          <h2>Window</h2>
+
+          <div id="div-x-window">
+            <label for="window-x-max">x max:</label>
+            <input type="number" name="window-x-max" id="window-x-max" min="" max="" placeholder="x">
+            <label for="window-x-min">x min:</label>
+            <input type="number" name="window-x-min" id="window-x-min" min="" max="" placeholder="x">
+          </div>
+          <div id="div-y-window">
+            <label for="window-y-max">y max:</label>
+            <input type="number" name="window-y-max" id="window-y-max" min="" max="" placeholder="y">
+            <label for="window-y-min">y min:</label>
+            <input type="number" name="window-y-min" id="window-y-min" min="" max="" placeholder="y">
+          </div>
+
+          <div id="div-button-window">
+            <button id="button-definir-window">Definir Window</button>
+          </div>
+        </div>
+
+        <div id="div-viewport-options">
+          <h2>Viewport</h2>
+
+          <div id="div-u-viewport">
+            <label for="viewport-u-max">u max:</label>
+            <input type="number" name="viewport-u-max" id="viewport-u-max" min="" max="" placeholder="u">
+            <label for="viewport-u-min">u min:</label>
+            <input type="number" name="viewport-u-min" id="viewport-u-min" min="0" max="" placeholder="u">
+          </div>
+          <div id="div-v-viewport">
+            <label for="viewport-v-max">v max:</label>
+            <input type="number" name="viewport-v-max" id="viewport-v-max" min="" max="" placeholder="v">
+            <label for="viewport-v-min">v min:</label>
+            <input type="number" name="viewport-v-min" id="viewport-v-min" min="0" max="" placeholder="v">
+          </div>
+
+          <div id="div-button-viewport">
+            <button id="button-definir-viewport">Definir Viewport</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- GERAR SUPERFICIE -->
+      <div id="div-gerar-exportar-carregar-options">
+        <button id="button-generate-surface">Gerar Superficie</button>
+        <button id="button-exportar-superficies">Exportar Superficies</button>
+        <input type="file" id="input_surfaces_data_file" style="display: none;">
+        <button onclick="document.getElementById('input_surfaces_data_file').click()" id="button-carregar-arquivo">Escolher Arquivo</button>
+      </div>
+
+      <!-- EDICAO SOBRE A SUPERFICIE -->
+      <div id="div-operacoes-superficie">
+
+        <!-- ARMAZENAMENTO DAS SUPERFICIES -->
+        <div id="div-select-pontos-de-controle">
+          <select name="superficies-armazenadas" id="superficies-armazenadas">
+            <option value="#" selected disabled>Selecione uma superficie</option>
+          </select>
+        </div>
+
+        <div id="div-button-editar-pontos-controle">
+          <button id="button-editar-pontos-controle">Editar Pontos de Controle</button>
+        </div>
+
+        <!-- TRANSFORMACOES GEOMÉTRICAS -->
+        <div id="div-tranformacoes-geometricas">
+
+          <!-- OPCOES DE TRANSLACAO -->
+          <div id="div-translation-options">
+            <label for="translation-x">X</label>
+            <input type="number" name="translation-x" id="translation-x" placeholder="tx">
+            <label for="translation-y">Y</label>
+            <input type="number" name="translation-y" id="translation-y" placeholder="ty">
+            <label for="translation-z">Z</label>
+            <input type="number" name="translation-z" id="translation-z" placeholder="tz">
+            <button id="button-aplicar-translacao">Aplicar Translação</button>
+          </div>
+
+          <!-- OPCOES DE ESCALA -->
+          <div id="div-scale-options">
+            <label for="scale-x">X</label>
+            <input type="number" name="scale-x" id="scale-x" placeholder="sx" step="0.1">
+            <label for="scale-y">Y</label>
+            <input type="number" name="scale-y" id="scale-y" placeholder="sy" step="0.1">
+            <label for="scale-z">Z</label>
+            <input type="number" name="scale-z" id="scale-z" placeholder="sz" step="0.1">
+            <button id="button-aplicar-escala">Aplicar Escala</button>
+          </div>
+
+          <!-- OPCOES DE ROTACAO -->
+          <div id="div-rotation-options">
+            <label for="rotation-angle">Ângulo (graus)</label>
+            <input type="number" name="rotation-angle" id="rotation-angle" step="1">
+
+            <label for="rotation-axis">Eixo de Rotação</label>
+            <select id="rotation-axis">
+              <option value="x">X</option>
+              <option value="y">Y</option>
+              <option value="z">Z</option>
+            </select>
+
+            <button id="button-aplicar-rotacao">Aplicar Rotação</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="div-editar-pontos-controle-superficie">
+      <h3>Editar Pontos de Controle</h3>
+
+      <div id="div-table-pontos-controle">
+        <table id="tabela-pontos-controle">
+          <thead>
+            <tr>
+              <th>Ponto</th>
+              <th>X</th>
+              <th>Y</th>
+              <th>Z</th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+
+      <button id="button-salvar-pontos-controle">Salvar Alterações</button>
+      <button id="button-fechar-janela-pontos-controle">Fechar</button>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+
+</html>

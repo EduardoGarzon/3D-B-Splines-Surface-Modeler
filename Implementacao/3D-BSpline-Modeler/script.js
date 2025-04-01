@@ -1,3 +1,20 @@
+// VRP: { x: 100, y: 15, z: 0 },
+// P: { x: 20, y: 10, z: 25 },
+// Y: { x: 0, y: 1, z: 0 }  
+
+// d_near: - 100
+// d_far: 1000
+
+// xmin: -8    
+// ymin: -6
+// xmax: 8
+// ymax: 6
+
+// umin: 0
+// vmin: 0
+// umax: 319
+// vmax: 219
+
 // --------------------------------------------------------------------------------------------------
 // INTERFACE
 // --------------------------------------------------------------------------------------------------
@@ -125,8 +142,8 @@ document.getElementById("button-define-resolution").addEventListener("click", fu
 // GERAR MALHA
 document.getElementById("button-generate-surface").addEventListener("click", function () {
     if ((NI >= 3 && NI <= 99) && (NJ >= 3 && NJ <= 99) && (TI >= 3 && TI <= 5) && (TJ >= 3 && TJ <= 5) && (RESOLUTIONI >= 10 && RESOLUTIONI <= 100) && (RESOLUTIONJ >= 10 && RESOLUTIONJ <= 100)) {
-        if (camera.VRP && camera.P && camera.Y) {
-            if (window_plane && viewport) {
+        if (camera.VRP.x) {
+            if (window_plane.xmax && viewport.umax) {
                 gerarSuperficie(NI, NJ, TI, TJ, RESOLUTIONI, RESOLUTIONJ);
                 executarPipelineVisualizacao(lista_superficies_SRU[lista_superficies_SRU.length - 1]);
             } else {
@@ -157,7 +174,7 @@ document.getElementById("definir-cor-aresta-visivel").addEventListener("click", 
 document.getElementById("definir-cor-aresta-nao-visivel").addEventListener("click", () => {
     cor_aresta_nao_visivel = document.getElementById("color-aresta-nao-visivel").value;
 
-    if (!cor_aresta_visivel) {
+    if (!cor_aresta_nao_visivel) {
         alert("Falha ao definir cor da aresta não visivel.");
     }
 });
@@ -279,7 +296,6 @@ document.getElementById("button-editar-pontos-controle").addEventListener("click
                 }
             }
         }
-
     } else {
         alert("Por favor, selecione uma superficie.");
     }
@@ -535,7 +551,6 @@ function set_Matriz_Rotacao(angle, axis) {
 // Função para multiplicar um ponto (objeto com x, y, z) por uma matriz de transformação 4x4.
 function multiplicar_ponto_matriz_transformacao_geometrica(point, T) {
 
-    // Converte o ponto para coordenadas homogêneas: [x, y, z, 1].
     let x = point.x, y = point.y, z = point.z;
 
     // Multiplica pelo vetor coluna, calculando cada componente.
@@ -695,18 +710,17 @@ function crossProduct(v1, v2) {
 
 // Função para multiplicação de matrizes.
 function multiplyMatrices(A, B) {
-    // Verifica se o número de colunas da matriz A é igual ao número de linhas da matriz B
+
     if (A[0].length !== B.length) {
         throw "As matrizes não podem ser multiplicadas: número de colunas de A não é igual ao número de linhas de B.";
     }
 
-    // Matriz resultante terá o número de linhas de A e o número de colunas de B
+    // Matriz resultante terá o número de linhas de A e o número de colunas de B.
     let result = new Array(A.length).fill().map(() => new Array(B[0].length).fill(0));
 
-    // Realiza a multiplicação das matrizes
-    for (let i = 0; i < A.length; i++) {  // Linhas de A
-        for (let j = 0; j < B[0].length; j++) {  // Colunas de B
-            for (let k = 0; k < A[0].length; k++) {  // Colunas de A / Linhas de B
+    for (let i = 0; i < A.length; i++) {                // Linhas de A
+        for (let j = 0; j < B[0].length; j++) {         // Colunas de B
+            for (let k = 0; k < A[0].length; k++) {     // Colunas de A / Linhas de B
                 result[i][j] += A[i][k] * B[k][j];
             }
         }
@@ -721,26 +735,16 @@ function calculateObjectCentroid(vertices) {
     let totalVertices = vertices.length;
 
     for (let i = 0; i < totalVertices; i++) {
-        centroid.x += vertices[i][0]; // Coordenada x
-        centroid.y += vertices[i][1]; // Coordenada y
-        centroid.z += vertices[i][2]; // Coordenada z
+        centroid.x += vertices[i][0]; // Coordenada x.
+        centroid.y += vertices[i][1]; // Coordenada y.
+        centroid.z += vertices[i][2]; // Coordenada z.
     }
 
-    // Dividir pela quantidade de vértices para obter a média
     centroid.x /= totalVertices;
     centroid.y /= totalVertices;
     centroid.z /= totalVertices;
 
     return centroid;
-}
-
-// Função para calcular um vetor unitário.
-function vetorUnitario(vetor, norma) {
-    return {
-        x: vetor.x / norma,
-        y: vetor.y / norma,
-        z: vetor.z / norma
-    };
 }
 
 // Função para calcular o centroide de uma face.
@@ -772,16 +776,16 @@ function calculateCentroidFace(face) {
 // --------------------------------------------------------------------------------------------------
 
 // CONSTANTES DEFININDO A QUANTIDADE DE PONTOS DE CONTROLE, GRAU E RESOLUCAO DA SUPERFICIE.
-let NI = 0;             // Número de pontos de controle na direção i (índices 0 a 3 → 4 pontos).
-let NJ = 0;             // Número de pontos de controle na direção j (índices 0 a 3 → 4 pontos).
-let TI = 0;             // Grau da spline na direção i.
-let TJ = 0;             // Grau da spline na direção j.
-let RESOLUTIONI = 0;    // Número de amostras (passos) para avaliar a spline na direção i.
-let RESOLUTIONJ = 0;    // Número de amostras (passos) para avaliar a spline na direção j.
+let NI = 0;
+let NJ = 0;
+let TI = 0;
+let TJ = 0;
+let RESOLUTIONI = 0;
+let RESOLUTIONJ = 0;
 
-let matriz_pontos_de_controle = []; // Armazena os pontos de controle SRU.
-let matriz_pontos_superficie = [];  // Armazena os pontos da superficie SRU.
-let lista_superficies_SRU = [];     // Armazena as superficies.
+let matriz_pontos_de_controle = [];
+let matriz_pontos_superficie = [];
+let lista_superficies_SRU = [];
 
 // CALCULOS PARA GERAR A MALHA
 function gerarSuperficie(NI, NJ, TI, TJ, RESOLUTIONI, RESOLUTIONJ, atualizandoSuperficie = false, index_surface_control_points_atualizados = -1) {
@@ -790,27 +794,23 @@ function gerarSuperficie(NI, NJ, TI, TJ, RESOLUTIONI, RESOLUTIONJ, atualizandoSu
     console.log("EXECUTANDO GERACAO DA SUPERFICIE");
     console.log("--------------------------------------------------------------------------------------------");
 
-    // Função para gerar um vetor de nós (knots) para a spline clamped (com extremos fixos).
-    // Esses nós determinam como e onde os pontos de controle influenciam a curva ou a superfície.
-    // Para uma spline de grau "degree" com n+1 pontos de controle, o número total de nós é n + degree + 2.
-    // Usamos L = n - degree + 2 para definir o intervalo dos nós.
-    // Após gerar o vetor de nós, esses valores são usados, junto com os pontos de controle, para calcular os pontos reais da superfície.
+    // Gerar o vetor de nós para uma spline clamped.
     function splineKnots(n, degree) {
-        const totalKnots = n + degree + 2; // Número total de nós.
+        const totalKnots = n + degree + 2;
         const knots = new Array(totalKnots);
-        const L = n - degree + 2;  // Valor final do parâmetro (por exemplo, para n=3, degree=3, L=2).
+        const L = n - degree + 2;
 
-        // Primeiros (degree+1) nós são 0:
+        // Nós iniciais.
         for (let i = 0; i <= degree; i++) {
             knots[i] = 0;
         }
 
-        // Últimos (degree+1) nós são L:
+        // Nós finais.
         for (let i = totalKnots - degree - 1; i < totalKnots; i++) {
             knots[i] = L;
         }
 
-        // Nós internos, se houver, distribuídos uniformemente entre 0 e L.
+        // Nós internos.
         if (n - degree > 0) {
             let step = L / (n - degree + 1);
 
@@ -822,17 +822,13 @@ function gerarSuperficie(NI, NJ, TI, TJ, RESOLUTIONI, RESOLUTIONJ, atualizandoSu
         return knots;
     }
 
-    // Função de blending (base B‑Spline) usando a recursão de Cox‑de‑Boor.
-    // Valores de influência dos pontos de controle em um dado parâmetro.
-    // Define como cada ponto de controle contribui para cada ponto avaliado na superfície.
+    // Fórmula recursiva de Cox‑de‑Boor para calcular a função de blending (ou base) de uma B‑Spline.
     function splineBlend(i, degree, knots, u) {
 
         if (degree === 0) {
 
-            // Caso base: retorna 1 se u estiver no intervalo [knots[i], knots[i+1]).
             if (knots[i] <= u && u < knots[i + 1]) return 1;
 
-            // Se u for o último valor e u == knots[i+1]
             if (u === knots[knots.length - 1] && u === knots[i + 1]) return 1;
 
             return 0;
@@ -858,15 +854,13 @@ function gerarSuperficie(NI, NJ, TI, TJ, RESOLUTIONI, RESOLUTIONJ, atualizandoSu
 
     // Nova superficie ou superficie remodelada.
     if (atualizandoSuperficie == false) {
-        // Criação dos pontos de controle (matriz matriz_pontos_de_controle) – dimensões: (NI+1) x (NJ+1).
         for (let i = 0; i <= NI; i++) {
             matriz_pontos_de_controle[i] = [];
 
             for (let j = 0; j <= NJ; j++) {
                 matriz_pontos_de_controle[i][j] = {
-                    x: i * 3,
-                    y: j * 3,
-                    // z será um número aleatório entre -1 e 1.
+                    x: (i - (NI / 2)) * 3,
+                    y: (j - (NJ / 2)) * 3,
                     z: (Math.floor(Math.random() * 10000) / 5000.0) - 1
                 };
             }
@@ -880,18 +874,15 @@ function gerarSuperficie(NI, NJ, TI, TJ, RESOLUTIONI, RESOLUTIONJ, atualizandoSu
         }
     }
 
-
     // Calcula os vetores de nós para cada direção.
     const knotsI = splineKnots(NI, TI);
     const knotsJ = splineKnots(NJ, TJ);
 
     // Calcula os incrementos para os parâmetros (u e v) usados para avaliar a spline.
-    // A faixa em u será de 0 até (NI - TI + 2) e em v de 0 até (NJ - TJ + 2)
     const incrementI = (NI - TI + 2) / (RESOLUTIONI - 1);
     const incrementJ = (NJ - TJ + 2) / (RESOLUTIONJ - 1);
 
-    // Cria a matriz de pontos da superfície (matriz_pontos_superficie) – dimensões: RESOLUTIONI x RESOLUTIONJ.
-    // Essa matriz vai armazenar os pontos avaliados na superfície B-spline.
+    // Matriz de Pontos da Superfície: RESOLUTIONI x RESOLUTIONJ.
     matriz_pontos_superficie = new Array(RESOLUTIONI);
     for (let i = 0; i < RESOLUTIONI; i++) {
         matriz_pontos_superficie[i] = new Array(RESOLUTIONJ);
@@ -906,6 +897,7 @@ function gerarSuperficie(NI, NJ, TI, TJ, RESOLUTIONI, RESOLUTIONJ, atualizandoSu
         for (let j = 0; j < RESOLUTIONJ - 1; j++) {
             let sum = { x: 0, y: 0, z: 0 };
 
+            // Percorre todos os pontos de controle.
             for (let ki = 0; ki <= NI; ki++) {
                 for (let kj = 0; kj <= NJ; kj++) {
                     let bi = splineBlend(ki, TI, knotsI, u);
@@ -923,10 +915,6 @@ function gerarSuperficie(NI, NJ, TI, TJ, RESOLUTIONI, RESOLUTIONJ, atualizandoSu
 
         u += incrementI;
     }
-
-    // Os laços anteriores não cobrem a última coluna e a última linha da matriz.
-    // São feitas somas semelhantes, mas fixando os índices correspondentes à borda (último j para coluna e último i para linha).
-    // O último ponto é atribuído diretamente como o último ponto de controle, garantindo consistência na borda.
 
     // Calcula os pontos da última coluna.
     u = 0;
@@ -1054,17 +1042,14 @@ let camera = {
 // --------------------------------------------------------------------------------------------------
 function set_Matriz_SRU_SRC(camera, n_unitario, v_unitario, u_unitario) {
 
-    // Verificação de dotProduct para evitar NaN.
     let dotU = dotProduct(camera.VRP, u_unitario);
     let dotV = dotProduct(camera.VRP, v_unitario);
     let dotN = dotProduct(camera.VRP, n_unitario);
 
-    // Se algum valor de dotProduct for NaN, definir um valor padrão.
     if (isNaN(dotU)) dotU = 0;
     if (isNaN(dotV)) dotV = 0;
     if (isNaN(dotN)) dotN = 0;
 
-    // MATRIZ DE TRANSFORMACAO DE CAMERA (M_SRU_SRC = R * T).
     return [
         [u_unitario.x, u_unitario.y, u_unitario.z, -dotU],
         [v_unitario.x, v_unitario.y, v_unitario.z, -dotV],
@@ -1105,7 +1090,6 @@ let d_far; // 1000
 // Função para verificar se o centroide do objeto está dentro dos planos near e far.
 function check_Near_Far(centroide_superficie, camera, d_near, d_far, n_unitario) {
 
-    // Calcular a projeção do centroide na direção da normal n.
     let proj = dotProduct(subtract(centroide_superficie, camera.VRP), n_unitario);
 
     console.log("--------------------------------------------------------------------------------------------");
@@ -1114,13 +1098,11 @@ function check_Near_Far(centroide_superficie, camera, d_near, d_far, n_unitario)
     console.log("Plano Far esperado em:", d_far);
     console.log("--------------------------------------------------------------------------------------------");
 
-    // Verificar se o centroide está atrás do plano Near
     if (proj < d_near) {
         console.log("O objeto está atrás do plano Near.");
         return false;
     }
 
-    // Verificar se o centroide está além do plano Far
     if (proj > d_far) {
         console.log("--------------------------------------------------------------------------------------------");
         console.log("O objeto está além do plano Far.");
@@ -1129,7 +1111,6 @@ function check_Near_Far(centroide_superficie, camera, d_near, d_far, n_unitario)
         return false;
     }
 
-    // Se o centroide está entre os planos near e far.
     console.log("--------------------------------------------------------------------------------------------");
     console.log("O objeto está dentro dos planos Near e Far.");
     console.log("--------------------------------------------------------------------------------------------");
@@ -1186,32 +1167,25 @@ function set_Matriz_Window_ViewPort(window_plane, viewport) {
 // --------------------------------------------------------------------------------------------------
 function calcular_visibilidade_faces(camera, matriz_pontos_superficie_SRU, RESOLUTIONI, RESOLUTIONJ, cor_aresta_visivel, cor_aresta_nao_visivel) {
 
-    // Vetor para armazenar as faces da malha ordenadas de forma decrescente pela sua sua distancia.
     let faces_ordenadas_SRU = [];
 
-    // Itera sobre a malha (células).
     for (let i = 0; i < RESOLUTIONI - 1; i++) {
         for (let j = 0; j < RESOLUTIONJ - 1; j++) {
 
-            // Define os quatro vértices da face (quadrilátero).
             let P0 = matriz_pontos_superficie_SRU[i][j];
             let P1 = matriz_pontos_superficie_SRU[i][j + 1];
             let P2 = matriz_pontos_superficie_SRU[i + 1][j + 1];
             let P3 = matriz_pontos_superficie_SRU[i + 1][j];
 
-            // Calcula o centróide da face.
             let centroide = {
                 x: (P0.x + P1.x + P2.x + P3.x) / 4,
                 y: (P0.y + P1.y + P2.y + P3.y) / 4,
                 z: (P0.z + P1.z + P2.z + P3.z) / 4
             };
 
-            // Calcula a distância do centróide ao VRP.
             let vet_VRP_CO = subtract(camera.VRP, centroide);
             let distancia = Math.sqrt(vet_VRP_CO.x * vet_VRP_CO.x + vet_VRP_CO.y * vet_VRP_CO.y + vet_VRP_CO.z * vet_VRP_CO.z);
 
-            // Calcula dois vetores de arestas da face.
-            // V1 = P1 - P0 e V2 = P3 - P0.
             let V1 = {
                 x: P1.x - P0.x,
                 y: P1.y - P0.y,
@@ -1223,24 +1197,14 @@ function calcular_visibilidade_faces(camera, matriz_pontos_superficie_SRU, RESOL
                 z: P3.z - P0.z
             };
 
-            // Calcula a normal da face (cross product de V1 e V2).
             let normal = crossProduct(V1, V2);
-            // Normaliza a normal.
-            let magNormal = magnitude(normal);
-            if (magNormal === 0) continue; // Evita divisão por zero.
-            normal = vetorUnitario(normal, magNormal);
+            normal = normalize(normal);
 
-            // Calcula o vetor do centroide até o VRP e normaliza.
-            O = subtract(camera.VRP, centroide);
-            let magO = magnitude(O);
-            if (magO === 0) continue;
-            O = vetorUnitario(O, magO);
+            let O = subtract(camera.VRP, centroide);
+            O = normalize(O);
 
-            // Teste de visibilidade: se o produto escalar for > 0, a face é visível.
             let visibilidade = dotProduct(O, normal);
             if (visibilidade > 0) {
-
-                // Armazena a face com seus dados (vértices, centroide, distância).
                 faces_ordenadas_SRU.push({
                     vertices: [P0, P1, P2, P3],
                     centroide: centroide,
@@ -1260,7 +1224,6 @@ function calcular_visibilidade_faces(camera, matriz_pontos_superficie_SRU, RESOL
         }
     }
 
-    // Ordena as faces visíveis da mais distante para a mais próxima (algoritmo do pintor).
     faces_ordenadas_SRU.sort((a, b) => b.distancia - a.distancia);
 
     return faces_ordenadas_SRU;
@@ -1273,7 +1236,6 @@ function calcular_visibilidade_faces(camera, matriz_pontos_superficie_SRU, RESOL
 // Função para multiplicar um ponto (objeto com x, y, z) por uma matriz de transformação 4x4.
 function transformar_Ponto_SRU_SRT(ponto_face_SRU, M_SRU_SRT) {
 
-    // Converte o ponto para coordenadas homogêneas [x, y, z, 1].
     let x = ponto_face_SRU.x, y = ponto_face_SRU.y, z = ponto_face_SRU.z;
     let xp = M_SRU_SRT[0][0] * x + M_SRU_SRT[0][1] * y + M_SRU_SRT[0][2] * z + M_SRU_SRT[0][3] * 1;
     let yp = M_SRU_SRT[1][0] * x + M_SRU_SRT[1][1] * y + M_SRU_SRT[1][2] * z + M_SRU_SRT[1][3] * 1;
@@ -1285,10 +1247,8 @@ function transformar_Ponto_SRU_SRT(ponto_face_SRU, M_SRU_SRT) {
 // Função para multiplicar uma matriz ([[{x, y, z}], [{...}], [{...}], ...]) por outra matriz ([[n1, n2, n3], [...], [...], ...]).
 function transformar_Faces_SRU_SRT(faces_SRU, M_SRU_SRT) {
 
-    // Cria um novo array com as faces transformadas.
     return faces_SRU.map(face => {
 
-        // Mapeia cada vértice da face.
         let verticesTransformados = face.vertices.map(ponto => transformar_Ponto_SRU_SRT(ponto, M_SRU_SRT));
 
         return {
@@ -1305,10 +1265,8 @@ function transformar_Faces_SRU_SRT(faces_SRU, M_SRU_SRT) {
 // Função para multiplicar um ponto (objeto com x, y, z) por uma matriz de transformação 4x4.
 function transformar_Ponto_Controle_SRU_SRT(point, T) {
 
-    // Converte o ponto para coordenadas homogêneas: [x, y, z, 1].
     let x = point.x, y = point.y, z = point.z;
 
-    // Multiplica pelo vetor coluna, calculando cada componente.
     let xp = T[0][0] * x + T[0][1] * y + T[0][2] * z + T[0][3] * 1;
     let yp = T[1][0] * x + T[1][1] * y + T[1][2] * z + T[1][3] * 1;
     let zp = T[2][0] * x + T[2][1] * y + T[2][2] * z + T[2][3] * 1;
@@ -1336,35 +1294,24 @@ function transformar_Matriz_Pontos_Controle_SRU_SRT(matrixPoints, T) {
 // ALGORITMO DO PINTOR
 // --------------------------------------------------------------------------------------------------
 function algoritmoDoPintor(faces_ordenadas_SRT) {
-
     faces_ordenadas_SRT.forEach(face => {
-
-        // Desenha o quadrilátero com a cor da aresta definida.
         desenharFace(face.vertices, face.aresta_color);
     });
 }
 
-function desenharFace(vertices, corAresta = "#000000", corPreenchimento = "rgb(255, 255, 255)") {
-
-    // Inicia um novo caminho no canvas.
+function desenharFace(vertices, corAresta, corPreenchimento = "rgb(255, 255, 255)") {
     ctx.beginPath();
-
-    // Move o "cursor" para o primeiro vértice.
     ctx.moveTo(vertices[0].x, vertices[0].y);
 
-    // Conecta todos os outros vértices.
     for (let i = 1; i < vertices.length; i++) {
         ctx.lineTo(vertices[i].x, vertices[i].y);
     }
 
-    // Fecha o polígono, conectando o último vértice ao primeiro.
     ctx.closePath();
 
-    // Define a cor de preenchimento e preenche a face.
     ctx.fillStyle = corPreenchimento;
     ctx.fill();
 
-    // Define a cor das arestas e desenha a borda da face.
     ctx.strokeStyle = corAresta;
     ctx.stroke();
 }
@@ -1379,13 +1326,11 @@ function desenharPontosControle(matriz_pontos_de_controle_SRT, cor = "red", raio
         for (let j = 0; j < matriz_pontos_de_controle_SRT[i].length; j++) {
             let ponto = matriz_pontos_de_controle_SRT[i][j];
 
-            // Desenha um círculo pequeno no ponto.
             ctx.beginPath();
             ctx.arc(ponto.x, ponto.y, raio, 0, 2 * Math.PI);
             ctx.fillStyle = cor;
             ctx.fill();
 
-            // Configurações para centralizar o texto dentro do círculo.
             ctx.fillStyle = "white";
             ctx.font = "bold 10px Arial";
             ctx.textAlign = "center";
@@ -1411,20 +1356,16 @@ function executarPipelineVisualizacao(superficie) {
     // BASE CANONICA ORTONORMAL DO SRC
     // --------------------------------------------------------------------------------------------------
 
-    // Cálculo do vetor N (direção da linha de visão).
+    // vetor N (direção da linha de visão).
     let N = subtract(camera.VRP, camera.P);
-
-    // Cálculo do vetor n (unitário, direção da linha de visão).
     let n_unitario = normalize(N);
 
-    // Cálculo do vetor V (ajuste do vetor up).
-    let Y_dot_n = dotProduct(camera.Y, n_unitario);
+    // vetor V (Vetor View Up).
+    let Y_dot_n = dotProduct(n_unitario, camera.Y);
     let V = subtract(camera.Y, { x: Y_dot_n * n_unitario.x, y: Y_dot_n * n_unitario.y, z: Y_dot_n * n_unitario.z });
-
-    // Cálculo do vetor v (unitário, ajustado).
     let v_unitario = normalize(V);
 
-    // Cálculo do vetor u (perpendicular a n e v).
+    // vetor u (perpendicular a n e v).
     let u_unitario = crossProduct(v_unitario, n_unitario);
 
     // DEFININDO A MATRIZ TRANSFORMACAO DE CAMERA.
@@ -1434,7 +1375,6 @@ function executarPipelineVisualizacao(superficie) {
     // RECORTE 3D
     // --------------------------------------------------------------------------------------------------
 
-    // Calculando centroide da superficie.
     let centroide_superficie = calcular_centroide_superficie(superficie.matriz_pontos_superficie_SRU);
 
     let recorte_3D_check = check_Near_Far(centroide_superficie, camera, d_near, d_far, n_unitario);
